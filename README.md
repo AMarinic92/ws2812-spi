@@ -8,6 +8,10 @@ produced by the SPI shift register rather than by cycle-counted bit-banging.
 The CPU is uninvolved once the DMA starts, and interrupts do not corrupt the
 waveform.
 
+Extracted from [Coffin-Reborn](https://github.com/AMarinic92/Coffin-Reborn) —
+see [MIGRATION.md](MIGRATION.md) if you are porting code that used the old
+`NeoPixel_*` API.
+
 - No fixed strip length — you own the buffer, sizing is checked at init
 - No hard-coded SERCOM or DMA channel — both are runtime parameters
 - Blocking, async, and FreeRTOS-blocking transmit paths
@@ -171,3 +175,11 @@ a SERCOM only if you never transmit on both at once.
 - Buffer cost is 9 bytes per LED plus 50 bytes of latch pulse.
 - At 2.4 MHz a frame takes about 30 us per LED — roughly 4.5 ms for 144 LEDs,
   which puts the ceiling near 200 fps at that length.
+
+## License
+
+[Mozilla Public License 2.0](LICENSE).
+
+File-level copyleft: if you modify these files, those modifications have to stay
+open. Linking the library into a larger, closed-source firmware image is fine,
+and the rest of your project is unaffected.
