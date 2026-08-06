@@ -1,0 +1,40 @@
+/* =============================================================================
+ * ws2812_fx.h - optional animation effects layered on the ws2812 driver
+ *
+ * These only stage pixels into the strip buffer. Call ws2812_show() or
+ * ws2812_show_async() yourself once you are done composing a frame:
+ *
+ *     ws2812_fx_fire(&strip, frame++, 80);
+ *     ws2812_show(&strip, 20);
+ *
+ * Nothing here is required by the driver. With -ffunction-sections and
+ * -Wl,--gc-sections the effects you never call cost no flash.
+ * ============================================================================= */
+
+#ifndef WS2812_FX_H
+#define WS2812_FX_H
+
+#include "ws2812/ws2812.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Full-spectrum rainbow across the strip.
+ * offset     : animation phase, increment once per frame
+ * brightness : 0-255, keep at or below 128 when running many LEDs off USB
+ */
+void ws2812_fx_rainbow(ws2812_t *dev, uint8_t offset, uint8_t brightness);
+
+/** Rainbow restricted to the green-to-purple arc of the hue wheel. */
+void ws2812_fx_green_purple(ws2812_t *dev, uint8_t offset, uint8_t brightness);
+
+/** Interpolated value-noise flicker in red/orange/yellow hues. */
+void ws2812_fx_fire(ws2812_t *dev, uint8_t offset, uint8_t brightness);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* WS2812_FX_H */
