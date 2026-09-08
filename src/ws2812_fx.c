@@ -104,8 +104,10 @@ void ws2812_fx_fire(ws2812_t *dev, uint8_t offset, uint8_t brightness)
         uint16_t xi = (uint16_t)(x >> 8u);      /* integer part  */
         uint16_t xf = (uint16_t)(x & 0xFFu);    /* fraction part */
 
-        /* Smoothstep easing so the interpolation has no visible corners. */
-        uint16_t t = (uint16_t)(((uint32_t)xf * xf * (65535u - (xf << 1u))) >> 16u);
+        /* Smoothstep easing so the interpolation has no visible corners.
+         * t^2*(3-2t) with xf as 0..255 standing in for 0..1, so the "3" is
+         * 768 in that scale. Result spans 0..65535 for lerp8by16. */
+        uint16_t t = (uint16_t)(((uint32_t)xf * xf * (768u - (xf << 1u))) >> 8u);
 
         uint8_t  noise = lerp8by16(hash8(xi), hash8((uint16_t)(xi + 1u)), t);
 
