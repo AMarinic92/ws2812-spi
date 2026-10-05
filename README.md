@@ -171,10 +171,12 @@ a SERCOM only if you never transmit on both at once.
 ## Limits
 
 - One DMA transfer is capped at 65535 bytes by the DMAC block counter, so
-  7280 LEDs per strip. `ws2812_init()` rejects anything larger.
-- Buffer cost is 9 bytes per LED plus 50 bytes of latch pulse.
-- At 2.4 MHz a frame takes about 30 us per LED — roughly 4.5 ms for 144 LEDs,
-  which puts the ceiling near 200 fps at that length.
+  7271 LEDs per strip. `ws2812_init()` rejects anything larger.
+- Buffer cost is 9 bytes per LED plus 90 bytes of reset pulse. The reset leads
+  the frame because the SERCOM drives MOSI high when idle - a trailing reset
+  leaves pixel 0 stuck green. Each frame is latched by the next show's reset.
+- At 2.4 MHz a frame takes about 30 us per LED plus 300 us of reset — roughly
+  4.6 ms for 144 LEDs, which puts the ceiling near 200 fps at that length.
 
 ## License
 

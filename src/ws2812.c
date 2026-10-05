@@ -111,7 +111,7 @@ bool ws2812_init(ws2812_t *dev, const ws2812_cfg_t *cfg)
     dev->notify_isr  = NULL;
     dev->waiter      = 0u;
 
-    /* Zero the whole transfer region so the tail reset bytes hold the line low,
+    /* Zero the whole transfer region so the head reset bytes hold the line low,
      * then encode black into the pixel region. */
     (void)memset(dev->buf, 0x00, (size_t)tx_len);
     ws2812_clear(dev);
@@ -130,7 +130,8 @@ void ws2812_set_pixel(ws2812_t *dev, uint16_t index, uint8_t r, uint8_t g, uint8
         return;
     }
 
-    p = &dev->buf[(uint32_t)index * WS2812_BYTES_PER_LED];
+    /* Pixel data sits after the leading reset bytes. */
+    p = &dev->buf[WS2812_RESET_BYTES + ((uint32_t)index * WS2812_BYTES_PER_LED)];
 
     if (dev->order == WS2812_ORDER_RGB)
     {

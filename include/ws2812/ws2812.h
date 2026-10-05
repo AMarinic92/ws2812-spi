@@ -19,8 +19,24 @@
  *   LED '0' -> SPI 1-0-0  ->  T0H = 417 ns, T0L = 833 ns  (spec 400+/-150 / 850+/-150)
  *
  * 24 LED bits (one pixel) -> 72 SPI bits -> 9 SPI bytes.
- * The buffer tail holds WS2812_RESET_BYTES zero bytes, which keeps MOSI low for
- * ~167 us and satisfies the >50 us latch requirement without a separate delay.
+ * The buffer HEAD holds WS2812_RESET_BYTES zero bytes, which keeps MOSI low for
+ * ~300 us before the pixel data and satisfies the latch requirement without a
+ * separate delay.
+ *
+ * WHY THE RESET COMES FIRST
+ * -------------------------
+ * The SERCOM SPI drives MOSI HIGH whenever it is idle. With the reset at the
+ * end of the frame, the strip latches, then MOSI rises as the SPI goes idle and
+ * the first LED takes that edge as the first bit of a new frame. The next frame
+ * then starts with the line already high, so its real first bit makes no edge
+ * and pixel 0's first bit always reads '1' - on GRB strips, pixel 0 is stuck
+ * with at least half-brightness green while the rest of the strip is fine.
+ *
+ * With the reset at the head, that idle edge arrives after every LED already
+ * holds its 24 bits, so it is forwarded off the end of the strip. The cost: a
+ * frame is latched by the reset at the start of the NEXT show, one refresh
+ * period later. Invisible when refreshing continuously; if you stop, call show
+ * once more to latch the last frame.
  *
  * REQUIRED MCC CONFIGURATION
  * --------------------------
@@ -60,15 +76,16 @@ extern "C" {
 /** SPI bytes emitted per LED (24 colour bits x 3 SPI bits / 8). */
 #define WS2812_BYTES_PER_LED   9u
 
-/** Trailing zero bytes that form the latch/reset pulse (~167 us at 2.4 MHz). */
-#define WS2812_RESET_BYTES     50u
+/** Leading zero bytes that form the latch/reset pulse (300 us at 2.4 MHz,
+ *  enough for WS2812B-V5 / SK6812 parts that need >280 us). */
+#define WS2812_RESET_BYTES     90u
 
 /**
  * Bytes of DMA buffer required for a strip of n LEDs.
  * Declare the buffer yourself, e.g.:
  *     static uint8_t buf[WS2812_BUF_BYTES(144)];
  */
-#define WS2812_BUF_BYTES(n)    (((uint32_t)(n) * WS2812_BYTES_PER_LED) + WS2812_RESET_BYTES)
+#define WS2812_BUF_BYTES(n)    (WS2812_RESET_BYTES + ((uint32_t)(n) * WS2812_BYTES_PER_LED))
 
 /* -- Types ------------------------------------------------------------------ */
 
@@ -110,7 +127,7 @@ typedef struct
     sercom_registers_t *sercom;
     uint32_t            dma_ch;
     uint8_t            *buf;
-    uint32_t            tx_len;      /**< bytes actually sent: leds*9 + reset */
+    uint32_t            tx_len;      /**< bytes actually sent: reset + leds*9 */
     uint16_t            num_leds;
     ws2812_order_t      order;
     ws2812_done_cb_t    on_complete;
@@ -153,6 +170,9 @@ void ws2812_clear(ws2812_t *dev);
  *
  * Do not stage new pixels until ws2812_is_busy() reports false - the DMA is
  * reading the same buffer.
+ *
+ * The frame appears when the next show's leading reset latches it - see
+ * WHY THE RESET COMES FIRST above.
  */
 bool ws2812_show_async(ws2812_t *dev);
 
