@@ -154,6 +154,7 @@ busy-wait path automatically, so it is safe during init.
 ws2812_fx_rainbow(&strip, frame++, 80);
 ws2812_fx_green_purple(&strip, frame++, 80);
 ws2812_fx_fire(&strip, frame++, 80);
+ws2812_fx_strobe_red_white(&strip, frame++, 4, 80);   /* flash every 4th frame */
 ws2812_show(&strip, 20);
 ```
 

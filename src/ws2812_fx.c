@@ -128,3 +128,38 @@ void ws2812_fx_fire(ws2812_t *dev, uint8_t offset, uint8_t brightness)
         ws2812_set_pixel(dev, i, r, g, b);
     }
 }
+
+void ws2812_fx_strobe_red_white(ws2812_t *dev, uint8_t offset, uint8_t period,
+                                uint8_t brightness)
+{
+    uint8_t flash;
+
+    if (dev == NULL)
+    {
+        return;
+    }
+
+    if (period < 2u)
+    {
+        period = 2u;
+    }
+
+    if ((offset % period) != 0u)
+    {
+        ws2812_clear(dev);
+        return;
+    }
+
+    /* Each flash's colour comes from the noise hash rather than alternating, so
+     * the strobe lurches instead of ticking like a metronome. */
+    flash = (uint8_t)(offset / period);
+
+    if (hash8(flash) < 128u)
+    {
+        ws2812_fill(dev, brightness, brightness, brightness);
+    }
+    else
+    {
+        ws2812_fill(dev, brightness, 0u, 0u);
+    }
+}

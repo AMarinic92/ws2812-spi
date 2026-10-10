@@ -40,6 +40,18 @@ void ws2812_fx_green_purple(ws2812_t *dev, uint8_t offset, uint8_t brightness);
 /** Interpolated value-noise flicker in red/orange/yellow hues. */
 void ws2812_fx_fire(ws2812_t *dev, uint8_t offset, uint8_t brightness);
 
+/**
+ * Hard strobe: one lit frame of white or red, the colour picked at random per
+ * flash, then dark until the next flash.
+ * offset     : increment once per frame
+ * period     : frames per flash - one lit, the rest dark. Values below 2 are
+ *              raised to 2, since a strobe needs a dark frame.
+ * brightness : 0-255. A white frame draws three times the current of red, and
+ *              every LED is lit at once - size the supply for that.
+ */
+void ws2812_fx_strobe_red_white(ws2812_t *dev, uint8_t offset, uint8_t period,
+                                uint8_t brightness);
+
 #ifdef __cplusplus
 }
 #endif
